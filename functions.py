@@ -2,7 +2,7 @@
 import pandas as pd
 import gspread
 
-gc = gspread.service_account("/Users/jwiggi/.config/gspread/credentials.json") #hangs here
+gc = gspread.service_account("/Users/jwiggi/.config/gspread/credentials.json")
 
 #cache so don't have to reload the data every time
 @st.cache_data
@@ -15,6 +15,9 @@ df = pd.DataFrame(data)
 
 df.head()
 
+#remove spaces from column names
+df.columns = df.columns.str.replace(' ', '')
+
 #extract the first column of df (player names)
 players = df.iloc[:, 0]
 
@@ -24,8 +27,3 @@ players.head()
 def get_email(player):
     return df.loc[df['Name'] == player, 'email']
 
-df.loc[df['Name'] == 'Will Wiggins', 'email']
-
-
-#does the fxn work?
-print(get_email('Will Wiggins'))
