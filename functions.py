@@ -1,22 +1,31 @@
-import re
+
 import pandas as pd
+import gspread
 
-#convert the google sheet url to csv url
-def convert_google_sheet_url(url):
-    # Regular expression to match and capture the necessary part of the URL
-    pattern = r'https://docs\.google\.com/spreadsheets/d/([a-zA-Z0-9-_]+)(/edit#gid=(\d+)|/edit.*)?'
+gc = gspread.service_account("/Users/jwiggi/.config/gspread/credentials.json") #hangs here
 
-    # Replace function to construct the new URL for CSV export
-    # If gid is present in the URL, it includes it in the export URL, otherwise, it's omitted
-    replacement = lambda m: f'https://docs.google.com/spreadsheets/d/{m.group(1)}/export?' + (f'gid={m.group(3)}&' if m.group(3) else '') + 'format=csv'
+#cache so don't have to reload the data every time
+@st.cache_data
+#the google sheet with player data
+sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/1WUElZS0I_1EVgoew2AoRH9jzgSf5s7CI8-DQCyES3X4/edit#gid=0").sheet1
 
-    # Replace using regex
-    clean_url = re.sub(pattern, replacement, url)
+data = sh.get_all_records()
 
-    return clean_url
+df = pd.DataFrame(data)
 
-url = https://docs.google.com/spreadsheets/d/1WUElZS0I_1EVgoew2AoRH9jzgSf5s7CI8-DQCyES3X4/edit#gid=0
+df.head()
 
-new = convert_google_sheet_url(url)
+#extract the first column of df (player names)
+players = df.iloc[:, 0]
+
+players.head()
+
+#function to get the players email based on input from the user
+def get_email(player):
+    return df.loc[df['Name'] == player, 'email']
+
+df.loc[df['Name'] == 'Will Wiggins', 'email']
 
 
+#does the fxn work?
+print(get_email('Will Wiggins'))
