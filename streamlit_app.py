@@ -54,13 +54,13 @@ loser = st.selectbox('Select the loser:', players)
 st.write('Great! ' + winner + ' won the match against ' + loser + '.')
 
 #update the players dataframe with the match results
-def update_results(winner, loser):
+def update_results(won, lost):
     #get the current rankings of the players
-    winner = winner
-    loser = loser
+    won = winner
+    lost = loser
     #Get the indices of the players (current rankings)
-    winner_index = players.index.get_loc(players[players['Name'] == winner].index[0])
-    loser_index = players.index.get_loc(players[players['Name'] == loser].index[0])
+    winner_index = players.index.get_loc(won)
+    loser_index = players.index.get_loc(lost)
     
     #check if the loser is ranked higher than the winner
     if loser_index > winner_index:
