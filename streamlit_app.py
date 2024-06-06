@@ -12,7 +12,6 @@ import gspread
 
 st.title('Stillwater Tennis Association Summer Singles Ladder')
 
-st.subheader('Current Player Standings')
 
 #Access google sheet with player data
 gc = gspread.service_account("/Users/jwiggi/.config/gspread/credentials.json")
@@ -20,11 +19,12 @@ gc = gspread.service_account("/Users/jwiggi/.config/gspread/credentials.json")
 #stopped working when i tried to cache the data
 #@st.cache_data
 #the google sheet with player data
-sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/1WUElZS0I_1EVgoew2AoRH9jzgSf5s7CI8-DQCyES3X4/edit#gid=0").sheet1
+def load_data():
+    sh = gc.open_by_url("https://docs.google.com/spreadsheets/d/1WUElZS0I_1EVgoew2AoRH9jzgSf5s7CI8-DQCyES3X4/edit#gid=0").sheet1
+    data = sh.get_all_records()
+    return pd.DataFrame(data)
 
-data = sh.get_all_records()
-
-df = pd.DataFrame(data)
+df = load_data()
 
 #remove spaces from column names
 df.columns = df.columns.str.replace(' ', '')
@@ -33,9 +33,13 @@ df.columns = df.columns.str.replace(' ', '')
 players = df.iloc[:, 0]
 #convert the series 'players' to a dataframe
 players = pd.DataFrame(players, columns=['Name'])
+#make players index start at 1
+players.index = df.index + 1
 
-#display the player names
-st.dataframe(players)
+# Initialize session state to store player data
+if 'players' not in st.session_state:
+    st.session_state.players = players
+
 
 # Initialize session state to track previous selection
 if 'previous_player' not in st.session_state:
@@ -67,13 +71,13 @@ if player != st.session_state.previous_player:
 st.subheader('Enter Match Results')
 winner = st.selectbox(
     'Select the winner:', 
-    players['Name'],
+    st.session_state.players['Name'],
     index=None, 
     placeholder='Select the winner'
 )
 loser = st.selectbox(
     'Select the loser:', 
-    players['Name'],
+    st.session_state.players['Name'],
     index=None, 
     placeholder='Select the loser'
 )
@@ -83,34 +87,37 @@ if winner and loser:
 
 
 #update the players dataframe with the match results
-'''
-def update_results(winner, loser, players):
 
+def update_results(winner, loser, players):
     #Get the indices of the players (current rankings)
     winner_index = players[players['Name'] == winner].index[0]
     loser_index = players[players['Name'] == loser].index[0]
-
     #check if the winner index is larger (lower in the rankings) than the loser index
     if loser_index < winner_index:
-        #reindex the DataFrame
+        #make a list the length of the players DataFrame
         new_order = list(range(len(players)))
         #remove the winner from the list
         new_order.pop(winner_index)
-        #insert the loser at the winner's index
+        #insert the winner at the loser's index
         new_order.insert(loser_index, winner_index)
         #reindex the DataFrame
-        players_updated = players.reindex(new_order).reset_index(drop=True)
-            
+        players = players.reindex(new_order).reset_index(drop=True)
         print('The winner has been moved up in the rankings.')
-        return players_updated
+        print(players)
     else:
         #if the winner is ranked higher than the loser, do nothing
         print('The winner is ranked higher than the loser. No changes made.')
-    
         
- 
-        
+    return players
+
+#Button to trigger the update_results function
+if st.button('Submit Match Results'):
+    st.session_state.players = update_results(winner, loser, st.session_state.players.copy())
+       
 #call the function and display the updated player rankings
-#updated_players = update_results(winner, loser, players.copy())
-st.write(update_results(winner, loser, players))
-'''
+if winner and loser:
+    st.write('Great! ' + winner + ' won the match against ' + loser + '.')
+
+st.subheader('Current Player Standings')
+#Display the updated player rankings
+st.dataframe(st.session_state.players)
