@@ -28,55 +28,89 @@ df = pd.DataFrame(data)
 
 #remove spaces from column names
 df.columns = df.columns.str.replace(' ', '')
+
 #extract the first column of df (player names)
 players = df.iloc[:, 0]
+#convert the series 'players' to a dataframe
+players = pd.DataFrame(players, columns=['Name'])
 
 #display the player names
 st.dataframe(players)
 
-st.subheader('I would like to challenge: ')
-player = st.selectbox('Select a player:', players)
+# Initialize session state to track previous selection
+if 'previous_player' not in st.session_state:
+    st.session_state.previous_player = None
+    
+st.subheader('Challenge a player')    
+#player to challenge selection
+player = st.selectbox(
+   "Who would you like to challenge?",
+   players['Name'],
+   index=None,
+   placeholder="Select a player...",
+)
 
+# Check if the selection has changed
+if player != st.session_state.previous_player:
+    # Get the player's email
+    def get_email(player):
+        return df.loc[df['Name'] == player, 'email'].values[0]
 
-#get the player's email
-def get_email(player):
-    return df.loc[df['Name'] == player, 'email']
-
-#display the player's email
-st.write('Cool! You would like to challenge ' + player + '. Email them at: ')
-st.write(get_email(player))
+    #display the player's email
+    st.write('Cool! You would like to challenge ' + player + '. Email them at: ')
+    st.write(get_email(player))
+    
+    #update the previous player selection
+    st.session_state.previous_player = player
 
 #Section for players to enter match results
 st.subheader('Enter Match Results')
-winner = st.selectbox('Select the winner:', players)
-loser = st.selectbox('Select the loser:', players)
+winner = st.selectbox(
+    'Select the winner:', 
+    players['Name'],
+    index=None, 
+    placeholder='Select the winner'
+)
+loser = st.selectbox(
+    'Select the loser:', 
+    players['Name'],
+    index=None, 
+    placeholder='Select the loser'
+)
 
-st.write('Great! ' + winner + ' won the match against ' + loser + '.')
+if winner and loser:
+    st.write('Great! ' + winner + ' won the match against ' + loser + '.')
+
 
 #update the players dataframe with the match results
-def update_results(won, lost):
-    #get the current rankings of the players
-    won = winner
-    lost = loser
+'''
+def update_results(winner, loser, players):
+
     #Get the indices of the players (current rankings)
-    winner_index = players.index.get_loc(won)
-    loser_index = players.index.get_loc(lost)
-    
-    #check if the loser is ranked higher than the winner
-    if loser_index > winner_index:
-        #if the loser is ranked higher than the winner, put the loser in the winner's spot and move the winner down one spot
-        #store the row data of the winner
-        winner_row = players.iloc[winner_index].copy()
-        
-        #shift the rows between loser and winner down by on position
-        players.iloc[winner_index:loser_index] = players.iloc[winner_index+1:loser_index+1].values
-        
-        #put the winner in the loser's spot
-        players.iloc[loser_index] = winner_row
-        
+    winner_index = players[players['Name'] == winner].index[0]
+    loser_index = players[players['Name'] == loser].index[0]
+
+    #check if the winner index is larger (lower in the rankings) than the loser index
+    if loser_index < winner_index:
+        #reindex the DataFrame
+        new_order = list(range(len(players)))
+        #remove the winner from the list
+        new_order.pop(winner_index)
+        #insert the loser at the winner's index
+        new_order.insert(loser_index, winner_index)
+        #reindex the DataFrame
+        players_updated = players.reindex(new_order).reset_index(drop=True)
+            
         print('The winner has been moved up in the rankings.')
+        return players_updated
     else:
         #if the winner is ranked higher than the loser, do nothing
         print('The winner is ranked higher than the loser. No changes made.')
+    
         
-st.write(update_results(winner, loser))
+ 
+        
+#call the function and display the updated player rankings
+#updated_players = update_results(winner, loser, players.copy())
+st.write(update_results(winner, loser, players))
+'''

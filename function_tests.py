@@ -18,10 +18,10 @@ print(winner_index)
 if loser_index < winner_index:
     #reindex the DataFrame
     new_order = list(range(len(data)))
-    #remove the loser from the list
-    new_order.pop(loser_index)
+    #remove the winner from the list
+    new_order.pop(winner_index)
     #insert the loser at the winner's index
-    new_order.insert(winner_index, loser_index)
+    new_order.insert(loser_index, winner_index)
     #reindex the DataFrame
     data = data.reindex(new_order).reset_index(drop=True)
         
@@ -31,11 +31,4 @@ else:
         #if the winner is ranked higher than the loser, do nothing
     print('The winner is ranked higher than the loser. No changes made.')
 
-#not quite working yet, but close
-
-# Example usage, this works?
-name_to_move = 'George'
-target_name = 'John'
-data = move_element(data, name_to_move, target_name)
-
-print(data)
+#working!!
