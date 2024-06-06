@@ -54,3 +54,13 @@ def update_results(winner, loser, players):
         print('The winner is ranked higher than the loser. No changes made.')
     
 update_results('Ringo', 'John', data)
+
+new_order = list(range(len(data)))
+print(new_order)
+new_order.pop(2)
+new_order.insert(0, 2)
+print(new_order)
+data = data.reindex(new_order).reset_index(drop=True)
+print(data)
+data.index = data.index + 1
+print(data)
